@@ -151,6 +151,14 @@ struct omap_board_config_kernel {
 	const void *data;
 };
 
+struct omap_gpio_switch_config {
+	char name[12];
+	u16 gpio;
+	int flags:4;
+	int type:4;
+	int key_code:24; /* Linux key code */
+};
+
 extern const void *__omap_get_config(u16 tag, size_t len, int nr);
 
 #define omap_get_config(tag, type) \

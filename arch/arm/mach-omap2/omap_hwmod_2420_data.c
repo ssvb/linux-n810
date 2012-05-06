@@ -362,7 +362,7 @@ static struct omap_hwmod_class uart_class = {
 /* UART1 */
 
 static struct omap_hwmod_irq_info uart1_mpu_irqs[] = {
-	{ .irq = INT_24XX_UART1_IRQ, },
+	{ .irq = 0, },
 };
 
 static struct omap_hwmod_dma_info uart1_sdma_reqs[] = {
@@ -673,6 +673,7 @@ static struct omap_hwmod_ocp_if *omap2420_gpio1_slaves[] = {
 
 static struct omap_hwmod omap2420_gpio1_hwmod = {
 	.name		= "gpio1",
+	.flags		= HWMOD_INIT_NO_RESET, /* Workaround: Don't reset the n810 MIPID */
 	.mpu_irqs	= omap242x_gpio1_irqs,
 	.mpu_irqs_cnt	= ARRAY_SIZE(omap242x_gpio1_irqs),
 	.main_clk	= "gpios_fck",

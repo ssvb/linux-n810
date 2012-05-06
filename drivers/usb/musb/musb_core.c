@@ -2427,8 +2427,13 @@ static struct platform_driver musb_driver = {
 
 /*-------------------------------------------------------------------------*/
 
+extern int musb_hdrc_glue_init(void);
+extern void musb_hdrc_glue_exit(void);
+
 static int __init musb_init(void)
 {
+	int err;
+
 #ifdef CONFIG_USB_MUSB_HDRC_HCD
 	if (usb_disabled())
 		return 0;
@@ -2456,7 +2461,17 @@ static int __init musb_init(void)
 #endif
 		", debug=%d\n",
 		musb_driver_name, musb_debug);
-	return platform_driver_probe(&musb_driver, musb_probe);
+
+	err = musb_hdrc_glue_init();
+	if (err)
+		return err;
+	err = platform_driver_probe(&musb_driver, musb_probe);
+	if (err) {
+		musb_hdrc_glue_exit();
+		return err;
+	}
+
+	return 0;
 }
 
 /* make us init after usbcore and i2c (transceivers, regulators, etc)
@@ -2467,5 +2482,6 @@ fs_initcall(musb_init);
 static void __exit musb_cleanup(void)
 {
 	platform_driver_unregister(&musb_driver);
+	musb_hdrc_glue_exit();
 }
 module_exit(musb_cleanup);

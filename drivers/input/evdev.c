@@ -78,7 +78,7 @@ static void evdev_event(struct input_handle *handle,
 			unsigned int type, unsigned int code, int value)
 {
 	struct evdev *evdev = handle->private;
-	struct evdev_client *client;
+	struct evdev_client *client, *c;
 	struct input_event event;
 
 	do_gettimeofday(&event.time);
@@ -89,9 +89,13 @@ static void evdev_event(struct input_handle *handle,
 	rcu_read_lock();
 
 	client = rcu_dereference(evdev->grab);
-	if (client)
+	if (client) {
 		evdev_pass_event(client, &event);
-	else
+		/* Also pass events to clients that did not grab the device. */
+		list_for_each_entry_rcu(c, &evdev->client_list, node)
+			if (c != client)
+				evdev_pass_event(c, &event);
+	} else
 		list_for_each_entry_rcu(client, &evdev->client_list, node)
 			evdev_pass_event(client, &event);
 

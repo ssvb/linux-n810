@@ -832,7 +832,7 @@ static irqreturn_t mmc_omap_irq(int irq, void *dev_id)
 		return IRQ_HANDLED;
 	}
 
-	if (end_command)
+	if (end_command && host->cmd)
 		mmc_omap_cmd_done(host, host->cmd);
 	if (host->data != NULL) {
 		if (transfer_error)
@@ -1456,6 +1456,7 @@ static int __init mmc_omap_probe(struct platform_device *pdev)
 	host->dma_ch = -1;
 
 	host->irq = irq;
+	host->reg_shift = (cpu_is_omap7xx() ? 1 : 2);
 	host->phys_base = host->mem_res->start;
 	host->virt_base = ioremap(res->start, res->end - res->start + 1);
 	if (!host->virt_base)
@@ -1495,7 +1496,9 @@ static int __init mmc_omap_probe(struct platform_device *pdev)
 		}
 	}
 
-	host->reg_shift = (cpu_is_omap7xx() ? 1 : 2);
+	/* Make sure the detect workqueue was run at least once. */
+	printk(KERN_INFO "OMAP-mmc: waiting for cards...\n");
+	mmc_flush_scheduled_work();
 
 	return 0;
 

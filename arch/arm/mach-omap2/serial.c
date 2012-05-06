@@ -546,10 +546,12 @@ static void omap_uart_idle_init(struct omap_uart_state *uart)
 		uart->padconf = 0;
 	}
 
-	uart->irqflags |= IRQF_SHARED;
-	ret = request_threaded_irq(uart->irq, NULL, omap_uart_interrupt,
-				   IRQF_SHARED, "serial idle", (void *)uart);
-	WARN_ON(ret);
+	if (uart->irq) {
+		uart->irqflags |= IRQF_SHARED;
+		ret = request_threaded_irq(uart->irq, NULL, omap_uart_interrupt,
+					   IRQF_SHARED, "serial idle", (void *)uart);
+		WARN_ON(ret);
+	}
 }
 
 void omap_uart_enable_irqs(int enable)
@@ -560,14 +562,17 @@ void omap_uart_enable_irqs(int enable)
 	list_for_each_entry(uart, &uart_list, node) {
 		if (enable) {
 			pm_runtime_put_sync(&uart->pdev->dev);
-			ret = request_threaded_irq(uart->irq, NULL,
-						   omap_uart_interrupt,
-						   IRQF_SHARED,
-						   "serial idle",
-						   (void *)uart);
+			if (uart->irq) {
+				ret = request_threaded_irq(uart->irq, NULL,
+							   omap_uart_interrupt,
+							   IRQF_SHARED,
+							   "serial idle",
+							   (void *)uart);
+			}
 		} else {
 			pm_runtime_get_noresume(&uart->pdev->dev);
-			free_irq(uart->irq, (void *)uart);
+			if (uart->irq)
+				free_irq(uart->irq, (void *)uart);
 		}
 	}
 }
@@ -655,6 +660,8 @@ static void serial_out_override(struct uart_port *up, int offset, int value)
 }
 #endif
 
+static struct omap_uart_state statebuf[4];
+
 void __init omap_serial_early_init(void)
 {
 	int i = 0;
@@ -670,9 +677,9 @@ void __init omap_serial_early_init(void)
 		if (!oh)
 			break;
 
-		uart = kzalloc(sizeof(struct omap_uart_state), GFP_KERNEL);
-		if (WARN_ON(!uart))
+		if (WARN_ON(i >= ARRAY_SIZE(statebuf)))
 			return;
+		uart = &statebuf[i];
 
 		uart->oh = oh;
 		uart->num = i++;

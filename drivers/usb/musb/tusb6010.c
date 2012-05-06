@@ -55,6 +55,7 @@ u8 tusb_get_revision(struct musb *musb)
 
 	return rev;
 }
+EXPORT_SYMBOL(tusb_get_revision);
 
 static int tusb_print_revision(struct musb *musb)
 {
@@ -218,6 +219,7 @@ void musb_write_fifo(struct musb_hw_ep *hw_ep, u16 len, const u8 *buf)
 	if (len > 0)
 		tusb_fifo_write_unaligned(fifo, buf, len);
 }
+EXPORT_SYMBOL(musb_write_fifo);
 
 void musb_read_fifo(struct musb_hw_ep *hw_ep, u16 len, u8 *buf)
 {
@@ -264,6 +266,7 @@ void musb_read_fifo(struct musb_hw_ep *hw_ep, u16 len, u8 *buf)
 	if (len > 0)
 		tusb_fifo_read_unaligned(fifo, buf, len);
 }
+EXPORT_SYMBOL(musb_read_fifo);
 
 static struct musb *the_musb;
 
@@ -1259,18 +1262,16 @@ static struct platform_driver tusb_driver = {
 	},
 };
 
-MODULE_DESCRIPTION("TUSB6010 MUSB Glue Layer");
-MODULE_AUTHOR("Felipe Balbi <balbi@ti.com>");
-MODULE_LICENSE("GPL v2");
+//MODULE_DESCRIPTION("TUSB6010 MUSB Glue Layer");
+//MODULE_AUTHOR("Felipe Balbi <balbi@ti.com>");
+//MODULE_LICENSE("GPL v2");
 
-static int __init tusb_init(void)
+int musb_hdrc_glue_init(void)
 {
 	return platform_driver_probe(&tusb_driver, tusb_probe);
 }
-subsys_initcall(tusb_init);
 
-static void __exit tusb_exit(void)
+void musb_hdrc_glue_exit(void)
 {
 	platform_driver_unregister(&tusb_driver);
 }
-module_exit(tusb_exit);

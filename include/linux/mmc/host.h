@@ -326,5 +326,7 @@ static inline int mmc_card_is_powered_resumed(struct mmc_host *host)
 	return host->pm_flags & MMC_PM_KEEP_POWER;
 }
 
+void mmc_flush_scheduled_work(void);
+
 #endif
 
